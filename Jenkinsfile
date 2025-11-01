@@ -4,7 +4,7 @@ pipeline {
   environment {
     DOCKERHUB_REPO = "azmeerasai/flask-mysql-demo"
     IMAGE_TAG = "${env.BUILD_NUMBER}"
-    DOCKERHUB_CREDENTIALS = 'dockerhub-creds'  // update with your Jenkins credential ID
+    DOCKERHUB_CREDENTIALS = 'dockerhub-creds'  // Update with your Jenkins credential ID
   }
 
   stages {
@@ -24,16 +24,27 @@ pipeline {
     }
 
     stage('Run Tests (smoke)') {
-  steps {
-    script {
-      def img = docker.image("${DOCKERHUB_REPO}:${IMAGE_TAG}")
-      img.run("-d --name temp_test -p 5000:5000")
-      bat "ping -n 6 127.0.0.1 >nul"
-      bat "curl --fail http://localhost:5000/ || (docker logs temp_test && exit 1)"
-      bat "docker rm -f temp_test || true"
+      steps {
+        script {
+          echo "Running smoke tests..."
+
+          // Clean up any old container with the same name
+          bat 'docker rm -f temp_test || exit 0'
+
+          def img = docker.image("${DOCKERHUB_REPO}:${IMAGE_TAG}")
+          img.run("-d --name temp_test -p 5000:5000")
+
+          // Wait 5 seconds for container startup
+          bat "ping -n 6 127.0.0.1 >nul"
+
+          // Test application endpoint
+          bat "curl --fail http://localhost:5000/ || (docker logs temp_test && exit 1)"
+
+          // Cleanup test container after check
+          bat "docker rm -f temp_test || exit 0"
+        }
+      }
     }
-  }
-}
 
     stage('Push to Docker Hub') {
       steps {
@@ -49,7 +60,7 @@ pipeline {
     }
 
     stage('Deploy (optional)') {
-      when { expression { return false } } // change to true to enable deployment
+      when { expression { return false } } // Enable later if you add deploy logic
       steps {
         echo "Deploy stage: add SSH + docker-compose deploy steps here."
       }
@@ -59,6 +70,7 @@ pipeline {
   post {
     always {
       echo "Cleaning workspace..."
+      bat 'docker rm -f temp_test || exit 0'
       cleanWs()
     }
     failure {
