@@ -2,7 +2,7 @@ pipeline {
   agent any
 
   environment {
-    DOCKERHUB_REPO = "azmeerasair/flask-mysql-demo"
+    DOCKERHUB_REPO = "azmeerasai/flask-mysql-demo"
     IMAGE_TAG = "${env.BUILD_NUMBER}"
     DOCKERHUB_CREDENTIALS = 'dockerhub-creds'  // change to your Jenkins credential id
   }
