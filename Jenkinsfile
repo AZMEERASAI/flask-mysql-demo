@@ -28,19 +28,19 @@ pipeline {
         script {
           echo "Running smoke tests..."
 
-          // Clean up any old container with the same name
+          // Remove any existing container named temp_test
           bat 'docker rm -f temp_test || exit 0'
 
           def img = docker.image("${DOCKERHUB_REPO}:${IMAGE_TAG}")
           img.run("-d --name temp_test -p 5000:5000")
 
-          // Wait 5 seconds for container startup
+          // Wait for 5 seconds for the container to start
           bat "ping -n 6 127.0.0.1 >nul"
 
-          // Test application endpoint
+          // Test the Flask app endpoint
           bat "curl --fail http://localhost:5000/ || (docker logs temp_test && exit 1)"
 
-          // Cleanup test container after check
+          // Remove the test container after testing
           bat "docker rm -f temp_test || exit 0"
         }
       }
@@ -58,25 +58,18 @@ pipeline {
         }
       }
     }
-
-    stage('Deploy (optional)') {
-      when { expression { return false } } // Enable later if you add deploy logic
-      steps {
-        echo "Deploy stage: add SSH + docker-compose deploy steps here."
-      }
-    }
   }
 
   post {
     always {
-      echo "Cleaning workspace..."
+      echo "Cleaning up workspace..."
       bat 'docker rm -f temp_test || exit 0'
       cleanWs()
     }
     failure {
       mail to: 'dev-team@example.com',
            subject: "Build failed: ${env.BUILD_URL}",
-           body: "Build failed. Please check logs in Jenkins."
+           body: "Build failed. Please check Jenkins logs for details."
     }
   }
 }
