@@ -30,8 +30,8 @@ pipeline {
           img.run("-d --name temp_test -p 5000:5000")
           sleep 5
           // simple curl to endpoint on the agent (assumes agent can access localhost:5000)
-          sh "curl --fail http://localhost:5000/ || (docker logs temp_test && exit 1)"
-          sh "docker rm -f temp_test || true"
+          bat "curl --fail http://localhost:5000/ || (docker logs temp_test && exit 1)"
+          bat "docker rm -f temp_test || true"
         }
       }
     }
@@ -49,14 +49,14 @@ pipeline {
       }
     }
 
-    // Optional deploy stage (SSH to remote host, docker pull & run)
-    stage('Deploy (optional)') {
-      when { expression { return false } } // change to true or remove when enabling
-      steps {
-        echo "Deploy stage: add your SSH + docker-compose deploy steps here."
-      }
-    }
-  }
+  //   // Optional deploy stage (SSH to remote host, docker pull & run)
+  //   stage('Deploy (optional)') {
+  //     when { expression { return false } } // change to true or remove when enabling
+  //     steps {
+  //       echo "Deploy stage: add your SSH + docker-compose deploy steps here."
+  //     }
+  //   }
+  // }
 
   post {
     always { cleanWs() }
