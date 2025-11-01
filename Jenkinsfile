@@ -49,14 +49,14 @@ pipeline {
       }
     }
 
-  //   // Optional deploy stage (SSH to remote host, docker pull & run)
-  //   stage('Deploy (optional)') {
-  //     when { expression { return false } } // change to true or remove when enabling
-  //     steps {
-  //       echo "Deploy stage: add your SSH + docker-compose deploy steps here."
-  //     }
-  //   }
-  // }
+    // Optional deploy stage (SSH to remote host, docker pull & run)
+    stage('Deploy (optional)') {
+      when { expression { return false } } // change to true or remove when enabling
+      steps {
+        echo "Deploy stage: add your SSH + docker-compose deploy steps here."
+      }
+    }
+  }
 
   post {
     always { cleanWs() }
