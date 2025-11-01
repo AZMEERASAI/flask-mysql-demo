@@ -24,36 +24,16 @@ pipeline {
     }
 
     stage('Run Tests (smoke)') {
-      steps {
-        script {
-          echo "Running container for smoke tests..."
-
-          // Ensure no old container conflicts
-          bat 'docker rm -f temp_test 2>nul || exit 0'
-
-          // Run new test container
-          def img = docker.image("${DOCKERHUB_REPO}:${IMAGE_TAG}")
-          img.run("-d --name temp_test -p 5000:5000")
-
-          // Give Flask time to start
-          bat 'timeout /t 5 /nobreak'
-
-          // Health check (endpoint test)
-          bat '''
-            powershell -Command "try {
-              Invoke-WebRequest -Uri http://localhost:5000/ -UseBasicParsing
-              Write-Host 'Health check passed'
-            } catch {
-              docker logs temp_test
-              exit 1
-            }"
-          '''
-
-          // Cleanup test container
-          bat 'docker rm -f temp_test || exit 0'
-        }
-      }
+  steps {
+    script {
+      def img = docker.image("${DOCKERHUB_REPO}:${IMAGE_TAG}")
+      img.run("-d --name temp_test -p 5000:5000")
+      bat "ping -n 6 127.0.0.1 >nul"
+      bat "curl --fail http://localhost:5000/ || (docker logs temp_test && exit 1)"
+      bat "docker rm -f temp_test || true"
     }
+  }
+}
 
     stage('Push to Docker Hub') {
       steps {
